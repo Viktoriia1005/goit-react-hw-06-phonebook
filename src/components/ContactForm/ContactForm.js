@@ -1,36 +1,49 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import actions from 'components/redux/actions';
+import { getContacts } from 'components/redux/selectors';
 
 import s from './ContactForm.module.css';
 
-function ContactForm({ onSubmit }) {
+function ContactForm() {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
 
-  const handleChange = e => {
-    const { name, value } = e.currentTarget;
+  const dispatch = useDispatch();
+  const contacts = useSelector(getContacts);
 
+  const handleInputChange = e => {
+    const { name, value } = e.currentTarget;
     switch (name) {
       case 'name':
         setName(value);
         break;
+
       case 'number':
         setNumber(value);
         break;
+
       default:
-        return new Error(`Something went wrong`);
+        return new Error(`Something went wrong in ContactForm`);
     }
   };
 
   const handleSubmit = e => {
     e.preventDefault();
 
-    onSubmit({
-      name,
-      number,
-    });
-    setName('');
-    setNumber('');
+    const isContact = contacts.find(contact => contact.name === name);
+    if (isContact) {
+      alert(`${name} is already in contact`);
+    } else {
+      dispatch(
+        actions.contactAdd({
+          name,
+          number,
+        })
+      );
+      setName('');
+      setNumber('');
+    }
   };
 
   return (
@@ -42,7 +55,7 @@ function ContactForm({ onSubmit }) {
           type="text"
           name="name"
           value={name}
-          onChange={handleChange}
+          onChange={handleInputChange}
           placeholder="Kuzya"
           pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
           title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
@@ -57,7 +70,7 @@ function ContactForm({ onSubmit }) {
           type="tel"
           name="number"
           value={number}
-          onChange={handleChange}
+          onChange={handleInputChange}
           placeholder="322-223-322"
           pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
           title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
@@ -71,9 +84,5 @@ function ContactForm({ onSubmit }) {
     </form>
   );
 }
-
-ContactForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-};
 
 export default ContactForm;
